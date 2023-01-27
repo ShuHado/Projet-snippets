@@ -11,21 +11,23 @@ datasource db {
 }
 
 model Users {
-  id            Int        @id @default(autoincrement())
-  email         String     @unique
+  id            Int          @id @default(autoincrement())
+  email         String       @unique
   password      String
   profile_image String?
-  createdAt     DateTime   @default(now()) @db.DateTime(0)
-  updatedAt     DateTime   @updatedAt @db.DateTime(0)
+  createdAt     DateTime     @default(now()) @db.DateTime(0)
+  updatedAt     DateTime     @updatedAt @db.DateTime(0)
   snippets      Snippets[]
+  categories    Categories[]
+  tags          Tags[]
 }
 
 model Snippets {
   id          Int        @id @default(autoincrement())
   title       String
   content     String     @db.Text
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime   @default(now()) @db.DateTime(0)
+  updatedAt   DateTime   @updatedAt @db.DateTime(0)
   user_id     Int
   category_id Int
   user        Users      @relation(fields: [user_id], references: [id])
@@ -36,11 +38,15 @@ model Snippets {
 model Categories {
   id       Int        @id @default(autoincrement())
   name     String
+  user_id  Int
+  user     Users      @relation(fields: [user_id], references: [id])
   snippets Snippets[]
 }
 
 model Tags {
   id       Int        @id @default(autoincrement())
   name     String
+  user_id  Int
+  user     Users      @relation(fields: [user_id], references: [id])
   snippets Snippets[]
 }

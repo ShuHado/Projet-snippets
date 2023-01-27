@@ -83,13 +83,23 @@ router.post("/login", async (req, res, next) => {
 			process.env["JWT_KEY"],
 			// durée du token
 			{
-				expiresIn: "30m",
+				expiresIn: "30h",
 			}
 		),
 	});
 });
 
-router.patch("/user", auth, async (req, res, next) => {
+router.get("/", auth, async (req, res, next) => {
+	const user = await prisma.users.findFirst({
+		where: {
+			id: req.auth.id,
+		},
+	});
+
+	res.json({ user });
+});
+
+router.patch("/", auth, async (req, res, next) => {
 	let modifyDatas;
 	try {
 		modifyDatas = UpdateValidator.parse(req.body);
