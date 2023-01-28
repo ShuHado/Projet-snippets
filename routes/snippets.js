@@ -39,6 +39,11 @@ router.post("/", auth, async (req, res, next) => {
 					id: snippetData.category_id,
 				},
 			},
+			tags: {
+				connect: snippetData.tags.map((tag) => {
+					return { id: tag };
+				}),
+			},
 			user: {
 				connect: {
 					id: req.auth.id,
@@ -58,6 +63,10 @@ router.get("/", auth, async (req, res, next) => {
 			user: {
 				id: req.auth.id,
 			},
+		},
+		include: {
+			category: true,
+			tags: true,
 		},
 	});
 
@@ -100,6 +109,16 @@ router.patch("/:id", auth, async (req, res, next) => {
 		return res.status(400).json({ errors: error.issues });
 	}
 
+	let snippet_infos = await prisma.snippets.findFirst({
+		where: {
+			id: snippet_id,
+		},
+	});
+
+	if (snippet_infos.user_id !== req.auth.id) {
+		return next(createError(400, "Ce snippet n'existe pas !"));
+	}
+
 	const snippet = await prisma.snippets.update({
 		where: {
 			id: snippet_id,
@@ -122,10 +141,6 @@ router.delete("/:id", auth, async (req, res, next) => {
 			id: snippet_id,
 		},
 	});
-
-	if (snippet === null) {
-		return next(createError(400, "Ce snippet n'existe pas !"));
-	}
 
 	if (snippet.user_id !== req.auth.id) {
 		return next(createError(400, "Ce snippet n'existe pas !"));

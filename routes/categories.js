@@ -47,7 +47,7 @@ router.get("/", auth, async (req, res, next) => {
 		},
 	});
 
-	if (!categories) {
+	if (categories.length > 0) {
 		res.json({ msg: "Categories get", categories });
 	} else {
 		return next(createError(400, "Vous n'avez pas de catégories !"));
