@@ -71,6 +71,10 @@ router.patch("/:id", auth, async (req, res, next) => {
 		},
 	});
 
+	if (!category) {
+		return next(createError(400, "Cette catégorie n'existe pas !"));
+	}
+
 	if (category.user_id !== req.auth.id) {
 		return next(createError(400, "Cette catégorie n'existe pas !"));
 	}
@@ -97,6 +101,10 @@ router.delete("/:id", auth, async (req, res, next) => {
 			id: category_id,
 		},
 	});
+
+	if (!category) {
+		return next(createError(400, "Cette catégorie n'existe pas !"));
+	}
 
 	if (category.user_id !== req.auth.id) {
 		return next(createError(400, "Cette catégorie n'existe pas !"));

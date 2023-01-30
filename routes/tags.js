@@ -71,6 +71,10 @@ router.patch("/:id", auth, async (req, res, next) => {
 		},
 	});
 
+	if (!tag) {
+		return next(createError(400, "Ce tag n'existe pas !"));
+	}
+
 	if (tag.user_id !== req.auth.id) {
 		return next(createError(400, "Ce tag n'existe pas !"));
 	}
@@ -97,6 +101,10 @@ router.delete("/:id", auth, async (req, res, next) => {
 			id: tag_id,
 		},
 	});
+
+	if (!tag) {
+		return next(createError(400, "Ce tag n'existe pas !"));
+	}
 
 	if (tag.user_id !== req.auth.id) {
 		return next(createError(400, "Ce tag n'existe pas !"));
