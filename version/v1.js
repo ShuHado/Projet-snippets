@@ -1,17 +1,10 @@
-import { expressjwt } from "express-jwt";
 import express from "express";
-
 import accountRouter from "../routes/account.js";
 import categoriesRouter from "../routes/categories.js";
 import snippetsRouter from "../routes/snippets.js";
 import tagsRouter from "../routes/tags.js";
 
 const router = express.Router();
-
-const auth = expressjwt({
-	secret: process.env["JWT_KEY"],
-	algorithms: ["HS256"],
-});
 
 router.use("/account", accountRouter);
 router.use("/categories", categoriesRouter);
