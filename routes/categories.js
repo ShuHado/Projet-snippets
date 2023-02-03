@@ -1,16 +1,15 @@
-import { expressjwt } from "express-jwt";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import CategoriesValidator from "../validator/CategoriesValidator.js";
 import createError from "http-errors";
+import auth from "../middleware/authentification.js";
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const auth = expressjwt({
-	secret: process.env["JWT_KEY"],
-	algorithms: ["HS256"],
-});
+const SORTORDER = "asc";
+const SKIP = 0;
+const TAKE = 5;
 
 //create categories with prisma
 
@@ -33,25 +32,62 @@ router.post("/", auth, async (req, res, next) => {
 		},
 	});
 
-	res.json({ msg: "Category created", category });
+	res.status(201).json(category);
 });
 
 //get all categories with prisma
 
 router.get("/", auth, async (req, res, next) => {
-	const categories = await prisma.categories.findMany({
-		where: {
-			user: {
-				id: req.auth.id,
-			},
-		},
+	// field to sort
+	const sortBy = req.query.sortBy;
+	// sorting order: asc or desc
+	const sortOrder = req.query.sortOrder || SORTORDER;
+
+	const skip = parseInt(req.query.skip) || SKIP;
+	const take = parseInt(req.query.take) || TAKE;
+
+	const where = {
+		user_id: req.auth.id,
+	};
+
+	const orderBy = {};
+	if (sortBy) {
+		orderBy[sortBy] = sortOrder;
+	}
+
+	const totalCategories = await prisma.snippets.count({
+		where,
 	});
 
-	if (categories.length > 0) {
-		res.json({ msg: "Categories get", categories });
-	} else {
-		return next(createError(400, "Vous n'avez pas de catégories !"));
-	}
+	const categories = await prisma.snippets.findMany({
+		where,
+		orderBy,
+		skip,
+		take,
+	});
+
+	const prevQuery = new URLSearchParams({
+		skip: Math.max(skip - take, 0),
+		take,
+	});
+
+	const nextQuery = new URLSearchParams({
+		skip: skip + take,
+		take,
+	});
+
+	res.json({
+		pagination: {
+			skip,
+			take,
+		},
+		total: totalCategories,
+		categories,
+		links: {
+			prev: `/v1/snippets?${prevQuery}`,
+			next: `/v1/snippets?${nextQuery}`,
+		},
+	});
 });
 
 //update categories with prisma
@@ -68,15 +104,12 @@ router.patch("/:id", auth, async (req, res, next) => {
 	let category = await prisma.categories.findFirst({
 		where: {
 			id: category_id,
+			user_id: req.auth.id,
 		},
 	});
 
 	if (!category) {
-		return next(createError(400, "Cette catégorie n'existe pas !"));
-	}
-
-	if (category.user_id !== req.auth.id) {
-		return next(createError(400, "Cette catégorie n'existe pas !"));
+		return next(createError(404, "Cette catégorie n'existe pas !"));
 	}
 
 	category = await prisma.categories.update({
@@ -84,11 +117,11 @@ router.patch("/:id", auth, async (req, res, next) => {
 			id: category_id,
 		},
 		data: {
-			name: categoryData.name,
+			...categoryData,
 		},
 	});
 
-	res.json({ msg: "Category updated", category });
+	res.json(category);
 });
 
 //delete categories by his id and his user_id with prisma
@@ -99,24 +132,21 @@ router.delete("/:id", auth, async (req, res, next) => {
 	let category = await prisma.categories.findFirst({
 		where: {
 			id: category_id,
+			user_id: req.auth.id,
 		},
 	});
 
 	if (!category) {
-		return next(createError(400, "Cette catégorie n'existe pas !"));
+		return next(createError(404, "Cette catégorie n'existe pas !"));
 	}
 
-	if (category.user_id !== req.auth.id) {
-		return next(createError(400, "Cette catégorie n'existe pas !"));
-	}
-
-	category = await prisma.categories.delete({
+	await prisma.categories.delete({
 		where: {
 			id: category_id,
 		},
 	});
 
-	res.json({ msg: "Category deleted", category });
+	res.json({ msg: "Category deleted" });
 });
 
 export default router;

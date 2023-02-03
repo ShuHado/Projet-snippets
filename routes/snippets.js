@@ -1,24 +1,18 @@
 import express from "express";
-
 import createError from "http-errors";
-
 import { PrismaClient } from "@prisma/client";
-
 import SnippetsValidator from "../validator/SnippetsValidator.js";
-
 import SnippetsUpdateValidator from "../validator/SnippetsUpdateValidator.js";
-
-import { expressjwt } from "express-jwt";
+import auth from "../middleware/authentification.js";
 
 const prisma = new PrismaClient();
 
 // j'initialise un routeur
 const router = express.Router();
 
-const auth = expressjwt({
-	secret: process.env["JWT_KEY"],
-	algorithms: ["HS256"],
-});
+const SORTORDER = "asc";
+const SKIP = 0;
+const TAKE = 5;
 
 //create snippets with prisma
 
@@ -40,8 +34,8 @@ router.post("/", auth, async (req, res, next) => {
 				},
 			},
 			tags: {
-				connect: snippetData.tags.map((tag) => {
-					return { id: tag };
+				connect: snippetData.tags.map((id) => {
+					return { id };
 				}),
 			},
 			user: {
@@ -52,28 +46,93 @@ router.post("/", auth, async (req, res, next) => {
 		},
 	});
 
-	res.json({ msg: "Snippet created", snippet });
+	res.json(snippet);
 });
-
-//get all snippets with prisma
 
 router.get("/", auth, async (req, res, next) => {
-	const snippets = await prisma.snippets.findMany({
-		where: {
-			user: {
-				id: req.auth.id,
+	const category_id = parseInt(req.query.category);
+
+	// field to sort
+	const sortBy = req.query.sortBy;
+	// sorting order: asc or desc
+	const sortOrder = req.query.sortOrder || SORTORDER;
+
+	const skip = parseInt(req.query.skip) || SKIP;
+	const take = parseInt(req.query.take) || TAKE;
+
+	const where = {
+		user_id: req.auth.id,
+	};
+
+	const select = {
+		id: true,
+		title: true,
+		createdAt: true,
+		updatedAt: true,
+	};
+
+	const orderBy = {};
+	if (sortBy) {
+		orderBy[sortBy] = sortOrder;
+	}
+
+	let category;
+
+	if (category_id) {
+		category = await prisma.categories.findFirst({
+			where: {
+				id: category_id,
+				user_id: req.auth.id,
 			},
-		},
-		include: {
-			category: true,
-			tags: true,
-		},
+		});
+	}
+
+	if (category_id && !category) {
+		return next(createError(404, "Cette catégorie n'existe pas !"));
+	}
+
+	if (category_id) {
+		where["category_id"] = category_id;
+	}
+
+	const totalSnippets = await prisma.snippets.count({
+		where,
 	});
 
-	res.json({ msg: "Snippets get", snippets });
+	const snippets = await prisma.snippets.findMany({
+		select,
+		where,
+		orderBy,
+		skip,
+		take,
+	});
+
+	const prevQuery = new URLSearchParams({
+		skip: Math.max(skip - take, 0),
+		take,
+	});
+
+	const nextQuery = new URLSearchParams({
+		skip: skip + take,
+		take,
+	});
+
+	res.json({
+		pagination: {
+			skip,
+			take,
+			category,
+		},
+		total: totalSnippets,
+		snippets,
+		links: {
+			prev: `/v1/snippets?${prevQuery}`,
+			next: `/v1/snippets?${nextQuery}`,
+		},
+	});
 });
 
-//get one snippets with prisma
+//get one snippets with prisma by id with error handling
 
 router.get("/:id", auth, async (req, res, next) => {
 	const snippet_id = parseInt(req.params.id);
@@ -81,20 +140,19 @@ router.get("/:id", auth, async (req, res, next) => {
 	let snippet = await prisma.snippets.findFirst({
 		where: {
 			id: snippet_id,
+			user_id: req.auth.id,
+		},
+		include: {
+			category: true,
+			tags: true,
 		},
 	});
 
-	if (snippet.user_id !== req.auth.id) {
-		return next(createError(400, "Ce snippet n'existe pas !"));
+	if (!snippet) {
+		return next(createError(404, "Ce snippet n'existe pas !"));
 	}
 
-	snippet = await prisma.snippets.delete({
-		where: {
-			id: snippet_id,
-		},
-	});
-
-	res.json({ msg: "Snippet get", snippet });
+	res.json(snippet);
 });
 
 //update snippets with prisma
@@ -109,26 +167,28 @@ router.patch("/:id", auth, async (req, res, next) => {
 		return res.status(400).json({ errors: error.issues });
 	}
 
-	let snippet_infos = await prisma.snippets.findFirst({
+	let snippet = await prisma.snippets.findFirst({
 		where: {
 			id: snippet_id,
+			user_id: req.auth.id,
 		},
 	});
 
-	if (snippet_infos.user_id !== req.auth.id) {
+	if (!snippet) {
 		return next(createError(400, "Ce snippet n'existe pas !"));
 	}
 
-	const snippet = await prisma.snippets.update({
+	snippet = await prisma.snippets.update({
 		where: {
 			id: snippet_id,
 		},
 		data: {
 			...snippetData,
+			updatedAt: new Date(),
 		},
 	});
 
-	res.json({ msg: "Snippet updated", snippet });
+	res.json(snippet);
 });
 
 //delete snippets with prisma
@@ -139,20 +199,21 @@ router.delete("/:id", auth, async (req, res, next) => {
 	let snippet = await prisma.snippets.findFirst({
 		where: {
 			id: snippet_id,
+			user_id: req.auth.id,
 		},
 	});
 
-	if (snippet.user_id !== req.auth.id) {
+	if (!snippet) {
 		return next(createError(400, "Ce snippet n'existe pas !"));
 	}
 
-	snippet = await prisma.snippets.delete({
+	await prisma.snippets.delete({
 		where: {
 			id: snippet_id,
 		},
 	});
 
-	res.json({ msg: "Snippet deleted", snippet });
+	res.json({ msg: "Snippet deleted" });
 });
 
 export default router;
