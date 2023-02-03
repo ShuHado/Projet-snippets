@@ -1,22 +1,17 @@
 // import * as dotenv from "dotenv";
 // dotenv.config();
-import { expressjwt } from "express-jwt";
 import jwt from "jsonwebtoken";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import UserValidator from "../validator/UserValidator.js";
 import RegisterValidator from "../validator/RegisterValidator.js";
 import UpdateValidator from "../validator/UpdateValidator.js";
+import auth from "../middleware/authentification.js";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-const auth = expressjwt({
-	secret: process.env["JWT_KEY"],
-	algorithms: ["HS256"],
-});
 
 router.post("/register", async (req, res, next) => {
 	let registerData;
@@ -35,9 +30,13 @@ router.post("/register", async (req, res, next) => {
 	if (user)
 		return next(createError(400, "Un compte existe déjà avec cet email."));
 
-	const hashedPassword = await bcrypt.hash(registerData.password, 10);
+	// on hash le mot de passe avec bcrypt en prenant le salt dans l'environnement
+	const hashedPassword = await bcrypt.hash(
+		registerData.password,
+		parseInt(process.env["BCRYPT_SALT"])
+	);
 
-	await prisma.users.create({
+	const userData = await prisma.users.create({
 		data: {
 			email: registerData.email,
 			password: hashedPassword,
@@ -45,7 +44,7 @@ router.post("/register", async (req, res, next) => {
 		},
 	});
 
-	res.json({ msg: "User created" });
+	res.status(201).json(userData);
 });
 
 router.post("/login", async (req, res, next) => {
@@ -96,7 +95,7 @@ router.get("/", auth, async (req, res, next) => {
 		},
 	});
 
-	res.json({ user });
+	res.json(user);
 });
 
 router.patch("/", auth, async (req, res, next) => {
@@ -108,16 +107,11 @@ router.patch("/", auth, async (req, res, next) => {
 	}
 
 	if (modifyDatas.password) {
-		modifyDatas.password = await bcrypt.hash(modifyDatas.password, 10);
+		modifyDatas.password = await bcrypt.hash(
+			modifyDatas.password,
+			parseInt(process.env["BCRYPT_SALT"])
+		);
 	}
-
-	const user = await prisma.users.findFirst({
-		where: {
-			id: req.auth.id,
-		},
-	});
-
-	if (!user) return next(createError(403, "Mauvais email / mot de passe"));
 
 	const userUpdated = await prisma.users.update({
 		where: {
@@ -129,10 +123,7 @@ router.patch("/", auth, async (req, res, next) => {
 		},
 	});
 
-	res.json({
-		msg: "User modified",
-		newInformations: userUpdated,
-	});
+	res.json(userUpdated);
 });
 
 export default router;

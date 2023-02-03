@@ -1,16 +1,11 @@
-import { expressjwt } from "express-jwt";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import TagsValidator from "../validator/TagsValidator.js";
 import createError from "http-errors";
+import auth from "../middleware/authentification.js";
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-const auth = expressjwt({
-	secret: process.env["JWT_KEY"],
-	algorithms: ["HS256"],
-});
 
 //create tags with prisma
 
@@ -33,7 +28,7 @@ router.post("/", auth, async (req, res, next) => {
 		},
 	});
 
-	res.json({ msg: "Tag created", tag });
+	res.status(201).json(tag);
 });
 
 //get all tags with prisma
@@ -41,17 +36,11 @@ router.post("/", auth, async (req, res, next) => {
 router.get("/", auth, async (req, res, next) => {
 	const tags = await prisma.tags.findMany({
 		where: {
-			user: {
-				id: req.auth.id,
-			},
+			user_id: req.auth.id,
 		},
 	});
 
-	if (tags.length > 0) {
-		res.json({ msg: "Tags get", tags });
-	} else {
-		return next(createError(400, "Vous n'avez pas de tags !"));
-	}
+	res.json(tags);
 });
 
 //update tag with prisma
@@ -68,15 +57,12 @@ router.patch("/:id", auth, async (req, res, next) => {
 	let tag = await prisma.tags.findFirst({
 		where: {
 			id: tag_id,
+			user_id: req.auth.id,
 		},
 	});
 
 	if (!tag) {
-		return next(createError(400, "Ce tag n'existe pas !"));
-	}
-
-	if (tag.user_id !== req.auth.id) {
-		return next(createError(400, "Ce tag n'existe pas !"));
+		return next(createError(404, "Ce tag n'existe pas !"));
 	}
 
 	tag = await prisma.tags.update({
@@ -88,7 +74,7 @@ router.patch("/:id", auth, async (req, res, next) => {
 		},
 	});
 
-	res.json({ msg: "Tag updated", tag });
+	res.json(tag);
 });
 
 //delete tag with prisma
@@ -99,24 +85,21 @@ router.delete("/:id", auth, async (req, res, next) => {
 	let tag = await prisma.tags.findFirst({
 		where: {
 			id: tag_id,
+			user_id: req.auth.id,
 		},
 	});
 
 	if (!tag) {
-		return next(createError(400, "Ce tag n'existe pas !"));
+		return next(createError(404, "Ce tag n'existe pas !"));
 	}
 
-	if (tag.user_id !== req.auth.id) {
-		return next(createError(400, "Ce tag n'existe pas !"));
-	}
-
-	tag = await prisma.tags.delete({
+	await prisma.tags.delete({
 		where: {
 			id: tag_id,
 		},
 	});
 
-	res.json({ msg: "Tag deleted", tag });
+	res.json({ msg: "Tag deleted" });
 });
 
 export default router;
