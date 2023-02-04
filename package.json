@@ -5,13 +5,14 @@
 	"type": "module",
 	"main": "app.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": "nodemon app.js"
+		"test": "vitest",
+		"dev": "nodemon server.js"
 	},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
 		"@prisma/client": "^4.9.0",
+		"@vitest/coverage-c8": "^0.28.3",
 		"bcrypt": "^5.1.0",
 		"cors": "^2.8.5",
 		"dotenv": "^16.0.3",
@@ -21,7 +22,9 @@
 		"http-errors": "^2.0.0",
 		"nodemon": "^2.0.20",
 		"prisma": "^4.9.0",
+		"supertest": "^6.3.3",
 		"swagger-ui-express": "^4.6.0",
+		"vitest": "^0.28.3",
 		"zod": "^3.20.2"
 	}
 }
