@@ -7,8 +7,7 @@ import cors from "cors";
 import v1 from "./version/v1.js";
 import docs from "./routes/docs.js";
 
-const app = express();
-const port = 3000;
+export const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -23,7 +22,3 @@ app.use("/", (req, res) =>
 		message: "Documentation is available at /docs",
 	})
 );
-
-app.listen(port, () => {
-	console.log(`Example app listening at http://localhost:${port}`);
-});
