@@ -46,7 +46,7 @@ router.post("/", auth, async (req, res, next) => {
 		},
 	});
 
-	res.json(snippet);
+	res.status(201).json(snippet);
 });
 
 router.get("/", auth, async (req, res, next) => {
@@ -175,7 +175,7 @@ router.patch("/:id", auth, async (req, res, next) => {
 	});
 
 	if (!snippet) {
-		return next(createError(400, "Ce snippet n'existe pas !"));
+		return next(createError(404, "Ce snippet n'existe pas !"));
 	}
 
 	snippet = await prisma.snippets.update({
@@ -204,7 +204,7 @@ router.delete("/:id", auth, async (req, res, next) => {
 	});
 
 	if (!snippet) {
-		return next(createError(400, "Ce snippet n'existe pas !"));
+		return next(createError(404, "Ce snippet n'existe pas !"));
 	}
 
 	await prisma.snippets.delete({
