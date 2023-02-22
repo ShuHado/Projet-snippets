@@ -178,13 +178,30 @@ router.patch("/:id", auth, async (req, res, next) => {
 		return next(createError(404, "Ce snippet n'existe pas !"));
 	}
 
+	let connectCategory = {};
+
+	if (snippetData.category_id) {
+		connectCategory["category"] = {
+			connect: {
+				id: snippetData.category_id,
+			},
+		};
+	}
+
 	snippet = await prisma.snippets.update({
 		where: {
 			id: snippet_id,
 		},
 		data: {
-			...snippetData,
+			title: snippetData.title,
+			content: snippetData.content,
 			updatedAt: new Date(),
+			...connectCategory,
+			tags: {
+				set: (snippetData.tags || []).map((id) => {
+					return { id };
+				}),
+			},
 		},
 	});
 
