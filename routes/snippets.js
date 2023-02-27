@@ -178,13 +178,21 @@ router.patch("/:id", auth, async (req, res, next) => {
 		return next(createError(404, "Ce snippet n'existe pas !"));
 	}
 
-	let connectCategory = {};
+	let connectOptions = {};
 
 	if (snippetData.category_id) {
-		connectCategory["category"] = {
+		connectOptions["category"] = {
 			connect: {
 				id: snippetData.category_id,
 			},
+		};
+	}
+
+	if (snippetData.tags) {
+		connectOptions["tags"] = {
+			set: snippetData.tags.map((id) => {
+				return { id };
+			}),
 		};
 	}
 
@@ -196,12 +204,7 @@ router.patch("/:id", auth, async (req, res, next) => {
 			title: snippetData.title,
 			content: snippetData.content,
 			updatedAt: new Date(),
-			...connectCategory,
-			tags: {
-				set: (snippetData.tags || []).map((id) => {
-					return { id };
-				}),
-			},
+			...connectOptions,
 		},
 	});
 
