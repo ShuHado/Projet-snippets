@@ -55,11 +55,11 @@ router.get("/", auth, async (req, res, next) => {
 		orderBy[sortBy] = sortOrder;
 	}
 
-	const totalCategories = await prisma.snippets.count({
+	const totalCategories = await prisma.categories.count({
 		where,
 	});
 
-	const categories = await prisma.snippets.findMany({
+	const categories = await prisma.categories.findMany({
 		where,
 		orderBy,
 		skip,
@@ -84,8 +84,8 @@ router.get("/", auth, async (req, res, next) => {
 		total: totalCategories,
 		categories,
 		links: {
-			prev: `/v1/snippets?${prevQuery}`,
-			next: `/v1/snippets?${nextQuery}`,
+			prev: `/v1/categories?${prevQuery}`,
+			next: `/v1/categories?${nextQuery}`,
 		},
 	});
 });
