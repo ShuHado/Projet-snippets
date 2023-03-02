@@ -44,6 +44,10 @@ router.post("/", auth, async (req, res, next) => {
 				},
 			},
 		},
+		include: {
+			category: true,
+			tags: true,
+		},
 	});
 
 	res.status(201).json(snippet);
