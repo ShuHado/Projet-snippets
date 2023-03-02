@@ -26,96 +26,6 @@ export default {
 		},
 	],
 	paths: {
-		"/account": {
-			get: {
-				summary: "Get account.",
-				tags: ["account"],
-				produces: ["application/json"],
-				security: [
-					{
-						jwt: [],
-					},
-				],
-				responses: {
-					200: {
-						description: "Successful operation",
-						schema: {
-							type: "array",
-						},
-					},
-				},
-			},
-			patch: {
-				summary: "Update tag.",
-				tags: ["account"],
-				produces: ["application/json"],
-				parameters: [
-					{
-						in: "path",
-						name: "id",
-						description: "Tag ID",
-						required: true,
-						type: "integer",
-						example: 42468,
-					},
-				],
-				security: [
-					{
-						jwt: [],
-					},
-				],
-				responses: {
-					200: {
-						description: "Successful operation",
-						schema: {
-							type: "array",
-						},
-					},
-					400: {
-						description: "Bad request",
-					},
-					404: {
-						description: "Tag not found",
-					},
-				},
-			},
-		},
-		"/account/register": {
-			post: {
-				summary: "Register account.",
-				tags: ["account"],
-				produces: ["application/json"],
-				responses: {
-					201: {
-						description: "Account created",
-						schema: {
-							type: "array",
-						},
-					},
-					400: {
-						description: "Bad request",
-					},
-				},
-			},
-		},
-		"/account/login": {
-			post: {
-				summary: "Login account.",
-				tags: ["account"],
-				produces: ["application/json"],
-				responses: {
-					201: {
-						description: "Tag created",
-						schema: {
-							type: "array",
-						},
-					},
-					403: {
-						description: "Bad email or password",
-					},
-				},
-			},
-		},
 		"/snippets": {
 			get: {
 				summary:
@@ -139,9 +49,12 @@ export default {
 				responses: {
 					200: {
 						description: "Successful operation",
-						schema: {
-							type: "array",
-						},
+					},
+					401: {
+						description: "Error: Unauthorized",
+					},
+					404: {
+						description: "Category not found",
 					},
 				},
 			},
@@ -154,15 +67,29 @@ export default {
 						jwt: [],
 					},
 				],
+				parameters: [
+					{
+						name: "snippet",
+						in: "body",
+						description: "Snippet infos",
+						required: true,
+						schema: {
+							$ref: "#/definitions/SnippetPost",
+						},
+					},
+				],
 				responses: {
 					201: {
 						description: "Category created",
 						schema: {
-							type: "array",
+							$ref: "#/definitions/Snippet",
 						},
 					},
 					400: {
 						description: "Bad request",
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 				},
 			},
@@ -190,12 +117,12 @@ export default {
 				responses: {
 					200: {
 						description: "Successful operation",
-						schema: {
-							type: "array",
-						},
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 					404: {
-						description: "Category not found",
+						description: "Snippet not found",
 					},
 				},
 			},
@@ -221,12 +148,12 @@ export default {
 				responses: {
 					200: {
 						description: "Successful operation",
-						schema: {
-							type: "array",
-						},
 					},
 					400: {
 						description: "Bad request",
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 					404: {
 						description: "Snippet not found",
@@ -256,6 +183,9 @@ export default {
 					200: {
 						description: "Successful operation",
 					},
+					401: {
+						description: "Error: Unauthorized",
+					},
 					404: {
 						description: "Snippet not found",
 					},
@@ -275,9 +205,9 @@ export default {
 				responses: {
 					200: {
 						description: "Successful operation",
-						schema: {
-							type: "array",
-						},
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 				},
 			},
@@ -290,15 +220,26 @@ export default {
 						jwt: [],
 					},
 				],
+				parameters: [
+					{
+						name: "name",
+						in: "formData",
+						description: "Category name",
+						required: true,
+					},
+				],
 				responses: {
 					201: {
 						description: "Category created",
 						schema: {
-							type: "array",
+							$ref: "#/definitions/Category",
 						},
 					},
 					400: {
 						description: "Bad request",
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 				},
 			},
@@ -327,14 +268,17 @@ export default {
 					200: {
 						description: "Successful operation",
 						schema: {
-							type: "array",
+							$ref: "#/definitions/Category",
 						},
 					},
 					400: {
 						description: "Bad request",
 					},
+					401: {
+						description: "Error: Unauthorized",
+					},
 					404: {
-						description: "Tag not found",
+						description: "Category not found",
 					},
 				},
 			},
@@ -364,6 +308,9 @@ export default {
 							type: "array",
 						},
 					},
+					401: {
+						description: "Error: Unauthorized",
+					},
 					404: {
 						description: "Category not found",
 					},
@@ -384,8 +331,11 @@ export default {
 					200: {
 						description: "Successful operation",
 						schema: {
-							type: "array",
+							$ref: "#/definitions/Tag",
 						},
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 				},
 			},
@@ -398,15 +348,26 @@ export default {
 						jwt: [],
 					},
 				],
+				parameters: [
+					{
+						name: "name",
+						in: "formData",
+						description: "Tag name",
+						required: true,
+					},
+				],
 				responses: {
 					201: {
 						description: "Tag created",
 						schema: {
-							type: "array",
+							$ref: "#/definitions/Tag",
 						},
 					},
 					400: {
 						description: "Bad request",
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 				},
 			},
@@ -435,11 +396,14 @@ export default {
 					200: {
 						description: "Successful operation",
 						schema: {
-							type: "array",
+							$ref: "#/definitions/Tag",
 						},
 					},
 					400: {
 						description: "Bad request",
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 					404: {
 						description: "Tag not found",
@@ -469,11 +433,146 @@ export default {
 					200: {
 						description: "Successful operation",
 						schema: {
-							type: "array",
+							$ref: "#/definitions/Tag",
 						},
+					},
+					401: {
+						description: "Error: Unauthorized",
 					},
 					404: {
 						description: "Tag not found",
+					},
+				},
+			},
+		},
+		"/account": {
+			get: {
+				summary: "Get account.",
+				tags: ["account"],
+				produces: ["application/json"],
+				security: [
+					{
+						jwt: [],
+					},
+				],
+				responses: {
+					200: {
+						description: "Successful operation",
+						schema: {
+							$ref: "#/definitions/Account",
+						},
+					},
+					401: {
+						description: "Error: Unauthorized",
+					},
+				},
+			},
+			patch: {
+				summary: "Update account.",
+				tags: ["account"],
+				produces: ["application/json"],
+				parameters: [
+					{
+						name: "email",
+						in: "formData",
+						description: "Account email",
+						required: false,
+					},
+					{
+						name: "password",
+						in: "formData",
+						description: "Account password",
+						required: false,
+					},
+					{
+						name: "profileImage",
+						in: "formData",
+						description: "Account profile image",
+						required: false,
+					},
+				],
+				security: [
+					{
+						jwt: [],
+					},
+				],
+				responses: {
+					200: {
+						description: "Successful operation",
+						schema: {
+							$ref: "#/definitions/Account",
+						},
+					},
+					400: {
+						description: "Bad request",
+					},
+				},
+			},
+		},
+		"/account/register": {
+			post: {
+				summary: "Register account.",
+				tags: ["account"],
+				produces: ["application/json"],
+				parameters: [
+					{
+						name: "email",
+						in: "formData",
+						description: "Account email",
+						required: true,
+						uniqueItems: true,
+					},
+					{
+						name: "password",
+						in: "formData",
+						description: "Account password",
+						required: true,
+					},
+					{
+						name: "profileImage",
+						in: "formData",
+						description: "Account profile image",
+						required: false,
+					},
+				],
+				responses: {
+					201: {
+						description: "Account created",
+						schema: {
+							$ref: "#/definitions/Account",
+						},
+					},
+					400: {
+						description: "Bad request",
+					},
+				},
+			},
+		},
+		"/account/login": {
+			post: {
+				summary: "Login account.",
+				tags: ["account"],
+				produces: ["application/json"],
+				parameters: [
+					{
+						name: "email",
+						in: "formData",
+						description: "Account email",
+						required: true,
+					},
+					{
+						name: "password",
+						in: "formData",
+						description: "Account password",
+						required: true,
+					},
+				],
+				responses: {
+					200: {
+						description: "Account logged in",
+					},
+					403: {
+						description: "Bad email or password",
 					},
 				},
 			},
@@ -489,56 +588,6 @@ export default {
 		},
 	},
 	definitions: {
-		User: {
-			type: "object",
-			properties: {
-				id: {
-					type: "integer",
-					example: 42468,
-				},
-				email: {
-					type: "string",
-					format: "email",
-					example: "nom.prenom@gmail.com",
-				},
-				password: {
-					type: "string",
-					format: "password",
-					example: "password",
-				},
-				profile_image: {
-					type: "string",
-					example:
-						"https://www.santevet.com/upload/admin/images/article/Chat%202/portrait_chat/les_5_sens_du_chat.jpg",
-				},
-				createdAt: {
-					type: "string",
-					example: "2023-01-01T10:35:21.000Z",
-				},
-				updatedAt: {
-					type: "string",
-					example: "2023-02-01T17:48:39.000Z",
-				},
-				snippets: {
-					type: "array",
-					items: {
-						$ref: "#/definitions/Snippet",
-					},
-				},
-				categories: {
-					type: "array",
-					items: {
-						$ref: "#/definitions/Category",
-					},
-				},
-				tags: {
-					type: "array",
-					items: {
-						$ref: "#/definitions/Tag",
-					},
-				},
-			},
-		},
 		Snippet: {
 			type: "object",
 			properties: {
@@ -575,6 +624,33 @@ export default {
 					items: {
 						$ref: "#/definitions/Tag",
 					},
+				},
+			},
+		},
+		SnippetPost: {
+			type: "object",
+			properties: {
+				title: {
+					type: "string",
+					example: "Snippet title",
+				},
+				content: {
+					type: "string",
+					example: "Snippet content",
+				},
+				category_id: {
+					type: "integer",
+					example: 42468,
+				},
+				tags: {
+					type: "array",
+					items: {
+						type: "integer",
+						format: "int64",
+						example: 42468,
+					},
+					minItems: 1,
+					example: [42468, 42469],
 				},
 			},
 		},
@@ -621,6 +697,39 @@ export default {
 					items: {
 						$ref: "#/definitions/Snippet",
 					},
+				},
+			},
+		},
+		Account: {
+			type: "object",
+			properties: {
+				id: {
+					type: "integer",
+					format: "int64",
+					example: 42468,
+				},
+				email: {
+					type: "string",
+					format: "email",
+					example: "nom.prenom@gmail.com",
+				},
+				password: {
+					type: "string",
+					format: "password",
+					example: "password",
+				},
+				profile_image: {
+					type: "string",
+					example:
+						"https://www.santevet.com/upload/admin/images/article/Chat%202/portrait_chat/les_5_sens_du_chat.jpg",
+				},
+				createdAt: {
+					type: "string",
+					example: "2023-01-01T10:35:21.000Z",
+				},
+				updatedAt: {
+					type: "string",
+					example: "2023-02-01T17:48:39.000Z",
 				},
 			},
 		},
