@@ -82,7 +82,7 @@ router.post("/login", async (req, res, next) => {
 			process.env["JWT_KEY"],
 			// durée du token
 			{
-				expiresIn: "30h",
+				expiresIn: "30m",
 			}
 		),
 	});
